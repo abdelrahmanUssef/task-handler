@@ -51,9 +51,8 @@ main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;colum
  <div class="stats" id="tellers" style="margin-bottom:10px"></div>
  <div class="tools">
   <input type="search" id="q" placeholder="Search tasks…">
-  <select id="tf"><option value="all">All tellers</option><option value="0">Unassigned</option><option value="1">Teller 1</option><option value="2">Teller 2</option><option value="3">Teller 3</option><option value="4">Teller 4</option></select>
+  <select id="tf"><option value="all">Everyone</option><option value="0">Unassigned</option></select>
   <button data-f="all" class="on">All</button><button data-f="pending">Pending</button><button data-f="done">Done</button><button data-f="na">Not available</button>
-  <select id="lim" title="Flag tasks slower than"><option value="15">Slow after 15 min</option><option value="30">Slow after 30 min</option><option value="45">Slow after 45 min</option><option value="60">Slow after 60 min</option><option value="90">Slow after 90 min</option><option value="120">Slow after 2 hours</option></select>
   <button id="rb">Time report</button><button id="reset">Reset today</button>
  </div></div></header>
 <section id="rep"></section>
@@ -61,20 +60,21 @@ main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;colum
 <script>
 const SEED={
 "Morning Tasks":["Vault Proofs","Morning Midas (Returned Chqs)","Reversal And Historical"],
-"Teller's Batch Cross Checking":["Teller 1","Teller 2","Teller 3","Teller 4"],
+"Teller's Batch Cross Checking":["Nada","Abdelrahman","Mohamed","Sherouk"],
 "Navigator Reports":["CBE Withdrawals","Transactions implemented over KYC Accounts","Account Opening and Closing","COD","CHQ Book - BPM","Data Quality KYC","NTB Data Quality","Casual Past Due","Referal By Account","Referal By Customer Number","Nil Report"],
-"T24 Reports":["Inactive Rest","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","vault Register","Cash Balance"],
+"T24 Reports":["Inactive Reset","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","vault Register","Cash Balance"],
 "physical Tasks":["Tazbeet And Ta2weet","SR + Termination","Cash Counted and Initialed","Internals Cross Checking","Swifts Cross checking","CPC & PDC Excell + Mail","CPC cross Checking","Mail Bag & Microfilm","Filing"],
 "Printing Logs":["Midas EOD","Batch Log","SR Log","Pending Log","Swifts Log","Recived CPC Mail"],
-"End Of day":["Daily OR","GDWF","Settle POS","Settle Shipment","Send Unauthorized Mail","Authorize All Pending Over T24","Authorize All Pending Over BPM","Gard Cash","Check Registers"],
+"End Of day":["Daily OR","GDWF","Settle POS","Settle Shipment","Send Unauthorized Mail","Authorize All Pending Charges Over T24","Authorize All Pending Over BPM","Gard Cash","Check Registers"],
 
 
 };
+const TATS=[2,2,5,30,30,30,30,5,5,10,5,5,5,5,10,5,5,2,5,2,15,2,15,5,15,5,15,30,30,20,15,10,10,10,20,5,2,5,5,10,5,5,5,5,10,10,15,2,20,10,10];/* minutes allowed per task, in task order */
 const tasks=[];let n=1;for(const c in SEED)SEED[c].forEach(t=>tasks.push({id:n++,c,t}));
 const pad=x=>String(x).padStart(2,"0");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let db=null,unsub=null,day=today(),S={},mode="connecting",filter="all",tfil="all",query="",queue={},H=[],limit=30,repOpen=false;
+let db=null,unsub=null,day=today(),S={},mode="connecting",filter="all",tfil="all",query="",queue={},H=[],repOpen=false;const NAMES=["Nada","Abdelrahman","Mohamed","Sherouk"],nm=k=>NAMES[k-1]||"";
 const LK=()=>"dwt_local_"+day;
 function loadLocal(){try{S=JSON.parse(localStorage.getItem(LK())||"{}")}catch(e){S={}}}
 function saveLocal(){try{localStorage.setItem(LK(),JSON.stringify(S))}catch(e){}}
@@ -86,10 +86,9 @@ function sub(){
 async function init(){
  render();
  try{db=await Promise.race([claude.use("db"),new Promise(r=>setTimeout(()=>r(null),10000))])}catch(e){db=null}
- if(db){sub();subMeta()}else{mode="local";loadLocal();try{limit=+localStorage.getItem("dwt_limit")||30}catch(e){}render()}
+ if(db){sub();subMeta()}else{mode="local";loadLocal();render()}
 }
 function subMeta(){
- db.doc("settings/main").onSnapshot(s=>{if(s.exists&&s.data().limit){limit=+s.data().limit;render()}},()=>{});
  db.collection("history").onSnapshot(s=>{H=s.docs.filter(d=>d.exists).map(d=>d.data());if(repOpen)render()},()=>{});
 }
 function checkDay(){if(day!==today()){day=today();if(db)sub();else{loadLocal();render()}}}
@@ -109,17 +108,18 @@ const A=id=>(S[id]&&S[id].a)||0,V=id=>(S[id]&&S[id].s)||"";
 const fmt=ms=>{const m=Math.floor(ms/60000);return m<1?"<1 min":m<60?m+" min":Math.floor(m/60)+"h "+pad(m%60)+"m"};
 const hhmm=ms=>new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 const el=id=>{const x=S[id];if(!x||!x.at||x.s==="na")return 0;return (x.dt||Date.now())-x.at};
-const isSlow=id=>el(id)>limit*60000;
+const tatOf=id=>TATS[id-1]||30;
+const isSlow=id=>el(id)>tatOf(id)*60000;
 function tmHtml(id){const x=S[id];if(!x||!x.at||x.s==="na")return"";const d=x.s==="done";
- return `<span class="tm ${isSlow(id)?"slow":""}">Assigned ${hhmm(x.at)} · ${d?"finished "+hhmm(x.dt)+" · took ":"in progress "}${fmt(el(id))}${isSlow(id)?" ⚠ slow":""}</span>`}
+ return `<span class="tm ${isSlow(id)?"slow":""}">Assigned ${hhmm(x.at)} · expected by ${hhmm(x.at+tatOf(id)*60000)} · ${d?"finished "+hhmm(x.dt)+" · took ":"in progress "}${fmt(el(id))}${isSlow(id)?" ⚠ LATE (TAT "+tatOf(id)+" min)":""}</span>`}
 function report(){
- lim.value=String(limit);rep.className=repOpen?"open":"";if(!repOpen)return;
+ rep.className=repOpen?"open":"";if(!repOpen)return;
  const rows=tasks.filter(t=>S[t.id]&&S[t.id].at&&V(t.id)!=="na").map(t=>({t,x:S[t.id],d:el(t.id)})).sort((a,b)=>b.d-a.d);
  const g={};H.forEach(r=>{(g[r.id]=g[r.id]||[]).push(r)});
  const avg=Object.keys(g).map(k=>{const l=g[k];return{t:tasks.find(t=>t.id==k),n:l.length,a:l.reduce((s,r)=>s+r.dur,0)/l.length,m:Math.max(...l.map(r=>r.dur))}}).filter(r=>r.t).sort((a,b)=>b.a-a.a).slice(0,15);
- const red=v=>v>limit*60000?' style="color:#dc2626;font-weight:600"':"";
- rep.innerHTML=`<div class="box"><div class="sc"><h3>Today (slowest first)</h3><table><tr><th>Task</th><th>Teller</th><th>Assigned</th><th>Finished</th><th>Time</th></tr>${rows.map(r=>`<tr><td>${esc(r.t.t)}</td><td>Teller ${r.x.a}</td><td>${hhmm(r.x.at)}</td><td>${r.x.dt?hhmm(r.x.dt):"in progress"}</td><td${red(r.d)}>${fmt(r.d)}</td></tr>`).join("")||'<tr><td colspan="5">Nothing assigned yet today.</td></tr>'}</table></div>
- <div class="sc"><h3>Slowest tasks across all days (average)</h3><table><tr><th>Task</th><th>Times done</th><th>Average</th><th>Longest</th></tr>${avg.map(r=>`<tr><td>${esc(r.t.t)}</td><td>${r.n}</td><td${red(r.a)}>${fmt(r.a)}</td><td>${fmt(r.m)}</td></tr>`).join("")||'<tr><td colspan="4">No finished tasks recorded yet.</td></tr>'}</table></div></div>`;
+ const red=(v,id)=>v>tatOf(id)*60000?' style="color:#dc2626;font-weight:600"':"";
+ rep.innerHTML=`<div class="box"><div class="sc"><h3>Today (longest first)</h3><table><tr><th>Task</th><th>Teller</th><th>Assigned</th><th>Expected by</th><th>Finished</th><th>TAT</th><th>Time</th></tr>${rows.map(r=>`<tr><td>${esc(r.t.t)}</td><td>${esc(nm(r.x.a))}</td><td>${hhmm(r.x.at)}</td><td>${hhmm(r.x.at+tatOf(r.t.id)*60000)}</td><td>${r.x.dt?hhmm(r.x.dt):"in progress"}</td><td>${tatOf(r.t.id)} min</td><td${red(r.d,r.t.id)}>${fmt(r.d)}</td></tr>`).join("")||'<tr><td colspan="7">Nothing assigned yet today.</td></tr>'}</table></div>
+ <div class="sc"><h3>Slowest tasks across all days (average)</h3><table><tr><th>Task</th><th>Times done</th><th>TAT</th><th>Average</th><th>Longest</th></tr>${avg.map(r=>`<tr><td>${esc(r.t.t)}</td><td>${r.n}</td><td>${tatOf(r.t.id)} min</td><td${red(r.a,r.t.id)}>${fmt(r.a)}</td><td${red(r.m,r.t.id)}>${fmt(r.m)}</td></tr>`).join("")||'<tr><td colspan="5">No finished tasks recorded yet.</td></tr>'}</table></div></div>`;
 }
 function stats(){
  let d=0,na=0;tasks.forEach(t=>{const v=V(t.id);if(v==="done")d++;else if(v==="na")na++});
@@ -127,8 +127,8 @@ function stats(){
  date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"saved on this device only":mode==="error"?"connection problem":"connecting…");
  sDone.textContent="Done "+d;sNa.textContent="N/A "+na;sPend.textContent="Pending "+(T-d-na)+" / "+T;
  b1.style.width=d/T*100+"%";b2.style.width=na/T*100+"%";
- let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip tl">Teller ${k}: ${dn}/${mine.length} done</span>`}
- const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip" style="color:#dc2626">Slow: ${sl}</span>`;tellers.innerHTML=h;
+ let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip tl">${NAMES[k-1]}: ${dn}/${mine.length} done</span>`}
+ const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip" style="color:#dc2626">Late: ${sl}</span>`;tellers.innerHTML=h;
 }
 function render(){
  const cats=[...new Set(tasks.map(t=>t.c))];let h="",shown=0;
@@ -139,13 +139,13 @@ function render(){
    if(ok)shown++;
    h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
    <div class="tt">${esc(t.t)}${tmHtml(t.id)}</div>
-   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>Teller ${k}</option>`).join("")}</select>
+   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select>
    <button class="nb" data-a="na">${v==="na"?"Undo N/A":"N/A"}</button></div>`});
   h+="</section>"});
  if(!shown)h+='<div class="empty">No tasks match this filter.</div>';
  main.innerHTML=h;stats();report();
 }
-main.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.tagName==="SELECT")return;checkDay();
+main.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.tagName==="SELECT"||b.tagName==="INPUT")return;checkDay();
  const id=+b.closest(".t").dataset.id,a=b.dataset.a;
  if(a==="done")put(id,{s:V(id)==="done"?"":"done"});
  else if(a==="na")put(id,{s:V(id)==="na"?"":"na"});
@@ -155,12 +155,12 @@ document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset
 q.oninput=()=>{query=q.value.toLowerCase();render()};
 tf.onchange=()=>{tfil=tf.value;render()};
 rb.onclick=()=>{repOpen=!repOpen;rb.classList.toggle("on",repOpen);render()};
-lim.onchange=()=>{limit=+lim.value;if(db){db.doc("settings/main").set({limit}).catch(()=>{})}else{try{localStorage.setItem("dwt_limit",limit)}catch(e){}}render()};
 reset.onclick=()=>{if(!confirm("Clear today’s assignments and progress for everyone?"))return;
  const ids=Object.keys(S);S={};render();
  if(!db){saveLocal();return}
  ids.forEach(id=>{queue[id]=(queue[id]||Promise.resolve()).then(()=>Promise.all([db.collection("days/"+day+"/tasks").doc(id).delete(),db.collection("history").doc(day+"-"+id).delete()])).catch(()=>{})})};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkDay()});
-setInterval(()=>{checkDay();if(document.activeElement.tagName!=="SELECT")render()},30000);
+setInterval(()=>{checkDay();if(!["SELECT"].includes(document.activeElement.tagName))render()},30000);
+document.getElementById("tf").insertAdjacentHTML("beforeend",NAMES.map((n,i)=>`<option value="${i+1}">${n}</option>`).join(""));
 init();
 </script></body></html>
