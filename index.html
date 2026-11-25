@@ -3,58 +3,70 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Daily Work Tasks</title>
 <style>
-:root{--bg:#f5f6f8;--card:#fff;--tx:#1b1f27;--mu:#6b7280;--bd:#e3e6ec;--ac:#2f6fed;--acb:#e8f0ff;--ok:#16a34a;--okb:#e7f7ed;--na:#d97706;--nab:#fdf1de;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1218;--card:#181c25;--tx:#e8eaf0;--mu:#8b93a3;--bd:#272c38;--ac:#6b9bff;--acb:#1c2a48;--ok:#4ade80;--okb:#12301f;--na:#fbbf24;--nab:#3a2c0f;color-scheme:dark}}
+:root{--bg:#eef1f6;--card:#fff;--tx:#0f172a;--mu:#64748b;--bd:#e2e8f0;--ac:#1d4ed8;--acb:#e6edff;--ok:#15803d;--okb:#e3f5e9;--na:#b45309;--nab:#fdf0dc;--rd:#dc2626;--rdb:#fdecec;--hd:#0f2a4a;--sh:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--card:#141b2e;--tx:#e6e9f2;--mu:#8e98ad;--bd:#242d45;--ac:#7aa2ff;--acb:#1b2a4f;--ok:#4ade80;--okb:#10301f;--na:#fbbf24;--nab:#3a2c0f;--rd:#f87171;--rdb:#3a1618;--hd:#101a33;color-scheme:dark}}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;border-bottom:1px solid var(--bd);padding:14px 20px}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 .wrap{max-width:1300px;margin:0 auto}
-.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
-h1{font-size:20px;margin:0}.date{color:var(--mu);font-size:13px}
+header{background:var(--hd);color:#fff;padding:20px 20px 16px}
+.top{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:20px}
+h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.01em}.date{color:rgba(255,255,255,.7);font-size:12.5px;margin-top:1px}
 .stats{display:flex;gap:8px;flex-wrap:wrap}
-.chip{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:var(--card)}
-.chip.ok{color:var(--ok);background:var(--okb);border-color:transparent}.chip.na{color:var(--na);background:var(--nab);border-color:transparent}.chip.tl{color:var(--ac);background:var(--acb);border-color:transparent}
-.bar{height:8px;background:var(--bd);border-radius:99px;margin:12px 0 10px;overflow:hidden;display:flex}
-.bar i{display:block;height:100%;transition:width .3s}.b1{background:var(--ok)}.b2{background:var(--na)}
+.chip{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:var(--card)}
+header .chip{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16);color:#fff}
+header .chip.ok{background:rgba(74,222,128,.18);color:#86efac}header .chip.na{background:rgba(251,191,36,.18);color:#fcd34d}header .chip.late{background:rgba(248,113,113,.22);color:#fecaca}
+.bar{height:6px;background:rgba(255,255,255,.16);border-radius:99px;margin:16px 0 12px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%;transition:width .3s}.b1{background:#4ade80}.b2{background:#fbbf24}
+.tb{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--bd);padding:10px 20px}
 .tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .tools input[type=search]{flex:1;min-width:160px}
 input,button,select{font:inherit;color:var(--tx)}
-input[type=search],select{padding:7px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card)}
-button{padding:7px 12px;border:1px solid var(--bd);border-radius:8px;background:var(--card);cursor:pointer}
-button:hover{border-color:var(--ac)}button.on{background:var(--ac);border-color:var(--ac);color:#fff}
-main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;column-gap:16px}
-.cat{break-inside:avoid;background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 16px;overflow:hidden}
-.cat h2{margin:0;padding:12px 14px;font-size:14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd)}
-.cat h2 span{color:var(--mu);font-weight:500;font-size:12px}
-.t{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--bd)}
-.t:last-child{border-bottom:0}
-.ck{width:22px;height:22px;border-radius:6px;border:2px solid var(--bd);flex:none;cursor:pointer;display:grid;place-items:center;font-size:14px;color:#fff}
+input[type=search],select{padding:8px 11px;border:1px solid var(--bd);border-radius:8px;background:var(--card)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+button{padding:8px 13px;border:1px solid var(--bd);border-radius:8px;background:var(--card);cursor:pointer;font-weight:500}
+button:hover{border-color:var(--ac);color:var(--ac)}button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+button#reset{color:var(--rd)}button#reset:hover{border-color:var(--rd)}
+main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;column-gap:18px}
+.cat{break-inside:avoid;background:var(--card);border:1px solid var(--bd);border-radius:12px;margin:0 0 18px;overflow:hidden;box-shadow:var(--sh)}
+.cat h2{margin:0;padding:12px 16px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);border-top:3px solid var(--ac)}
+.cat h2 span{color:var(--ac);background:var(--acb);padding:2px 9px;border-radius:99px;font-weight:600;font-size:11px;letter-spacing:0;text-transform:none}
+.t{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);transition:background .15s}
+.t:hover{background:var(--bg)}.t:last-child{border-bottom:0}
+.ck{width:22px;height:22px;border-radius:50%;border:2px solid #cbd5e1;flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff;transition:all .15s}
+.ck:hover{border-color:var(--ok)}
 .t.done .ck{background:var(--ok);border-color:var(--ok)}
 .t.na .ck{background:var(--na);border-color:var(--na)}
-.tt{flex:1;min-width:0;word-break:break-word}
-.t.done .tt{text-decoration:line-through;color:var(--mu)}
-.t.na .tt{color:var(--mu);font-style:italic}
-.t select{font-size:12px;padding:4px 6px;max-width:92px}
+.tt{flex:1;min-width:0;word-break:break-word;font-weight:500}
+.t.done .tt{text-decoration:line-through;color:var(--mu);font-weight:400}
+.t.na .tt{color:var(--mu);font-weight:400}
+.t select{font-size:12px;padding:5px 7px;max-width:112px;border-radius:99px}
 .t select.has{background:var(--acb);color:var(--ac);border-color:transparent;font-weight:600}
-.nb{font-size:11px;padding:3px 8px;color:var(--mu)}.t.na .nb{background:var(--nab);color:var(--na);border-color:transparent}
+.nb{font-size:11px;padding:4px 10px;color:var(--mu);border-radius:99px}.t.na .nb{background:var(--nab);color:var(--na);border-color:transparent}
+.nb:disabled{cursor:default;opacity:.85}
 .t.hide{display:none}
-.tm{display:block;font-size:11px;color:var(--mu);margin-top:2px}.tm.slow{color:#dc2626;font-weight:600}.t.slow{box-shadow:inset 3px 0 #dc2626}
-#rep{display:none;max-width:1300px;margin:16px auto 0;padding:0 20px}#rep.open{display:block}
-#rep .box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
-#rep .sc{overflow-x:auto}h3{margin:0 0 8px;font-size:14px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mu);font-weight:600}
+.tm{display:block;font-size:11.5px;color:var(--mu);margin-top:2px;font-weight:400}.tm.slow{color:var(--rd);font-weight:600}
+.t.slow{background:var(--rdb);box-shadow:inset 3px 0 var(--rd)}
+#rep{display:none;max-width:1300px;margin:18px auto 0;padding:0 20px}#rep.open{display:block}
+#rep .box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:var(--sh);display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}
+#rep .sc{overflow-x:auto}h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu)}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--bd);white-space:nowrap}th{color:var(--mu);font-weight:600;font-size:11.5px;background:var(--bg)}
 .empty{color:var(--mu);text-align:center;padding:40px;column-span:all}
+@media (max-width:600px){header{padding:16px 14px 12px}.tb{padding:8px 14px}main{padding:14px 14px 32px}.t select{max-width:96px}}
 </style></head><body>
 <header><div class="wrap">
- <div class="top"><div><h1>Daily Work Tasks</h1><div class="date" id="date"></div></div>
+ <div class="top"><div class="brand"><div class="logo">📋</div><div><h1>Daily Work Tasks</h1><div class="date" id="date"></div></div></div>
  <div class="stats"><span class="chip ok" id="sDone"></span><span class="chip na" id="sNa"></span><span class="chip" id="sPend"></span></div></div>
  <div class="bar"><i class="b1" id="b1"></i><i class="b2" id="b2"></i></div>
- <div class="stats" id="tellers" style="margin-bottom:10px"></div>
- <div class="tools">
+ <div class="stats" id="tellers"></div>
+</div></header>
+<div class="tb"><div class="wrap"><div class="tools">
   <input type="search" id="q" placeholder="Search tasks…">
   <select id="tf"><option value="all">Everyone</option><option value="0">Unassigned</option></select>
   <button data-f="all" class="on">All</button><button data-f="pending">Pending</button><button data-f="done">Done</button><button data-f="na">Not available</button>
   <button id="rb">Time report</button><button id="reset">Reset today</button>
- </div></div></header>
+ </div></div></div>
 <section id="rep"></section>
 <main id="main"></main>
 <script>
@@ -62,15 +74,17 @@ const SEED={
 "Morning Tasks":["Vault Proofs","Morning Midas (Returned Chqs)","Reversal And Historical"],
 "Teller's Batch Cross Checking":["Nada","Abdelrahman","Mohamed","Sherouk"],
 "Navigator Reports":["CBE Withdrawals","Transactions implemented over KYC Accounts","Account Opening and Closing","COD","CHQ Book - BPM","Data Quality KYC","NTB Data Quality","Casual Past Due","Referal By Account","Referal By Customer Number","Nil Report"],
-"T24 Reports":["Inactive Reset","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","vault Register","Cash Balance"],
-"physical Tasks":["Tazbeet And Ta2weet","SR + Termination","Cash Counted and Initialed","Internals Cross Checking","Swifts Cross checking","CPC & PDC Excell + Mail","CPC cross Checking","Mail Bag & Microfilm","Filing"],
+"T24 Reports":["Inactive Reset","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","Vault Register","Cash Balance"],
+"physical Tasks":["Tazbeet And Ta2weet","SR + Termination","Cash Counted and Initialed","Internals Cross Checking","Swifts Cross checking","CPC & PDC Excell + Mail","CPC cross Checking","Mail Bag","Filing"],
 "Printing Logs":["Midas EOD","Batch Log","SR Log","Pending Log","Swifts Log","Recived CPC Mail"],
 "End Of day":["Daily OR","GDWF","Settle POS","Settle Shipment","Send Unauthorized Mail","Authorize All Pending Charges Over T24","Authorize All Pending Over BPM","Gard Cash","Check Registers"],
 
 
 };
-const TATS=[2,2,5,30,30,30,30,5,5,10,5,5,5,5,10,5,5,2,5,2,15,2,15,5,15,5,15,30,30,20,15,10,10,10,20,5,2,5,5,10,5,5,5,5,10,10,15,2,20,10,10];/* minutes allowed per task, in task order */
+const TATS=[2,2,5,30,30,30,30,5,5,10,5,5,5,5,10,5,5,2,5,2,15,2,15,5,15,5,15,30,30,20,15,10,10,10,5,5,2,5,5,10,5,5,5,5,10,10,15,2,20,10,10];/* minutes allowed per task, in task order */
 const tasks=[];let n=1;for(const c in SEED)SEED[c].forEach(t=>tasks.push({id:n++,c,t}));
+TATS[51]=15;const DAYS={52:[0,3]};/* Microfilm: Sunday & Wednesday only */
+tasks.splice(tasks.findIndex(t=>t.t==="Mail Bag")+1,0,{id:52,c:"physical Tasks",t:"Microfilm"});
 const pad=x=>String(x).padStart(2,"0");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -104,13 +118,15 @@ function put(id,patch){
   const hr=db.collection("history").doc(day+"-"+id);
   if(nx.s==="done"&&nx.at)await hr.set({id:+id,tl:nx.a,day,dur:nx.dt-nx.at,t:nx.dt});else if(cur.s==="done"&&nx.s!=="done")await hr.delete()}).catch(()=>{mode="error";render()});
 }
-const A=id=>(S[id]&&S[id].a)||0,V=id=>(S[id]&&S[id].s)||"";
+const dow=()=>new Date(day+"T12:00:00").getDay();
+const lock=id=>!!DAYS[id]&&!DAYS[id].includes(dow());
+const A=id=>(S[id]&&S[id].a)||0,V=id=>lock(id)?"na":(S[id]&&S[id].s)||"";
 const fmt=ms=>{const m=Math.floor(ms/60000);return m<1?"<1 min":m<60?m+" min":Math.floor(m/60)+"h "+pad(m%60)+"m"};
 const hhmm=ms=>new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 const el=id=>{const x=S[id];if(!x||!x.at||x.s==="na")return 0;return (x.dt||Date.now())-x.at};
 const tatOf=id=>TATS[id-1]||30;
 const isSlow=id=>el(id)>tatOf(id)*60000;
-function tmHtml(id){const x=S[id];if(!x||!x.at||x.s==="na")return"";const d=x.s==="done";
+function tmHtml(id){if(DAYS[id]&&lock(id))return`<span class="tm">Available Sundays &amp; Wednesdays only</span>`;const x=S[id];if(!x||!x.at||x.s==="na")return"";const d=x.s==="done";
  return `<span class="tm ${isSlow(id)?"slow":""}">Assigned ${hhmm(x.at)} · expected by ${hhmm(x.at+tatOf(id)*60000)} · ${d?"finished "+hhmm(x.dt)+" · took ":"in progress "}${fmt(el(id))}${isSlow(id)?" ⚠ LATE (TAT "+tatOf(id)+" min)":""}</span>`}
 function report(){
  rep.className=repOpen?"open":"";if(!repOpen)return;
@@ -127,8 +143,8 @@ function stats(){
  date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"saved on this device only":mode==="error"?"connection problem":"connecting…");
  sDone.textContent="Done "+d;sNa.textContent="N/A "+na;sPend.textContent="Pending "+(T-d-na)+" / "+T;
  b1.style.width=d/T*100+"%";b2.style.width=na/T*100+"%";
- let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip tl">${NAMES[k-1]}: ${dn}/${mine.length} done</span>`}
- const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip" style="color:#dc2626">Late: ${sl}</span>`;tellers.innerHTML=h;
+ let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip">${NAMES[k-1]}: ${dn}/${mine.length} done</span>`}
+ const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip late">Late: ${sl}</span>`;tellers.innerHTML=h;
 }
 function render(){
  const cats=[...new Set(tasks.map(t=>t.c))];let h="",shown=0;
@@ -140,13 +156,13 @@ function render(){
    h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
    <div class="tt">${esc(t.t)}${tmHtml(t.id)}</div>
    <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select>
-   <button class="nb" data-a="na">${v==="na"?"Undo N/A":"N/A"}</button></div>`});
+   <button class="nb" data-a="na" ${lock(t.id)?"disabled":""}>${lock(t.id)?"Not today":v==="na"?"Undo N/A":"N/A"}</button></div>`});
   h+="</section>"});
  if(!shown)h+='<div class="empty">No tasks match this filter.</div>';
  main.innerHTML=h;stats();report();
 }
 main.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.tagName==="SELECT"||b.tagName==="INPUT")return;checkDay();
- const id=+b.closest(".t").dataset.id,a=b.dataset.a;
+ const id=+b.closest(".t").dataset.id,a=b.dataset.a;if(lock(id))return;
  if(a==="done")put(id,{s:V(id)==="done"?"":"done"});
  else if(a==="na")put(id,{s:V(id)==="na"?"":"na"});
 });
