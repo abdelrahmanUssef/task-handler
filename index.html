@@ -34,21 +34,23 @@ main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;colum
 .cat h2 span{color:var(--ac);background:var(--acb);padding:2px 9px;border-radius:99px;font-weight:600;font-size:11px;letter-spacing:0;text-transform:none}
 .t{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);transition:background .15s}
 .hr{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.cat h2 span.ct{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
-.tp{font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:1px 8px;margin-left:8px;white-space:nowrap;font-weight:500}
+.mt{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
+.px{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--ac);background:var(--acb);border-color:transparent}
+.tp{font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:1px 8px;white-space:nowrap;font-weight:500}
 .t:hover{background:var(--bg)}.t:last-child{border-bottom:0}
 .ck{width:22px;height:22px;border-radius:50%;border:2px solid #cbd5e1;flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff;transition:all .15s}
 .ck:hover{border-color:var(--ok)}
 .t.done .ck{background:var(--ok);border-color:var(--ok)}
 .t.na .ck{background:var(--na);border-color:var(--na)}
-.tt{flex:1;min-width:0;word-break:break-word;font-weight:500}
-.t.done .tt{text-decoration:line-through;color:var(--mu);font-weight:400}
-.t.na .tt{color:var(--mu);font-weight:400}
+.tt{flex:1;min-width:0;word-break:break-word}.nm{font-weight:500}
+.t.done .nm{text-decoration:line-through;color:var(--mu);font-weight:400}
+.t.na .nm{color:var(--mu);font-weight:400}
 .t select{font-size:12px;padding:5px 7px;max-width:112px;border-radius:99px}
 .t select.has{background:var(--acb);color:var(--ac);border-color:transparent;font-weight:600}
-.nb{font-size:11px;padding:4px 10px;color:var(--mu);border-radius:99px}.t.na .nb{background:var(--nab);color:var(--na);border-color:transparent}
+.nb{font-size:11px;font-weight:600;padding:1px 9px;color:var(--mu);border-radius:99px}.t.na .nb{background:var(--nab);color:var(--na);border-color:transparent}
 .nb:disabled{cursor:default;opacity:.85}
 .t.hide{display:none}
-.tm{display:block;font-size:11.5px;color:var(--mu);margin-top:2px;font-weight:400}.tm.slow{color:var(--rd);font-weight:600}
+.tm{display:block;font-size:11.5px;color:var(--mu);margin-top:4px;font-weight:400}.tm.slow{color:var(--rd);font-weight:600}
 .t.slow{background:var(--rdb);box-shadow:inset 3px 0 var(--rd)}
 #rep{display:none;max-width:1300px;margin:18px auto 0;padding:0 20px}#rep.open{display:block}
 #rep .box{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;box-shadow:var(--sh);display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px}
@@ -112,11 +114,11 @@ function put(id,patch){
  const cur=S[id]||{a:0,s:"",at:0,dt:0},nx=Object.assign({a:0,s:"",at:0,dt:0},cur,patch),now=Date.now();
  if(patch.a!==undefined&&patch.a!==cur.a){nx.at=patch.a?now:0;nx.dt=0;if(nx.s==="done")nx.s=""}
  if(patch.s!==undefined)nx.dt=patch.s==="done"?now:0;
- if(!nx.a&&!nx.s)delete S[id];else S[id]=nx;
+ if(!nx.a&&!nx.s&&!nx.x)delete S[id];else S[id]=nx;
  render();
  if(!db){saveLocal();return}
  const ref=db.collection("days/"+day+"/tasks").doc(String(id));
- queue[id]=(queue[id]||Promise.resolve()).then(async()=>{await((nx.a||nx.s)?ref.set(nx):ref.delete());
+ queue[id]=(queue[id]||Promise.resolve()).then(async()=>{await((nx.a||nx.s||nx.x)?ref.set(nx):ref.delete());
   const hr=db.collection("history").doc(day+"-"+id);
   if(nx.s==="done"&&nx.at)await hr.set({id:+id,tl:nx.a,day,dur:nx.dt-nx.at,t:nx.dt});else if(cur.s==="done"&&nx.s!=="done")await hr.delete()}).catch(()=>{mode="error";render()});
 }
@@ -126,7 +128,7 @@ const A=id=>(S[id]&&S[id].a)||0,V=id=>lock(id)?"na":(S[id]&&S[id].s)||"";
 const fmt=ms=>{const m=Math.floor(ms/60000);return m<1?"<1 min":m<60?m+" min":Math.floor(m/60)+"h "+pad(m%60)+"m"};
 const hhmm=ms=>new Date(ms).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
 const el=id=>{const x=S[id];if(!x||!x.at||x.s==="na")return 0;return (x.dt||Date.now())-x.at};
-const tatOf=id=>TATS[id-1]||30;
+const xOf=id=>(S[id]&&S[id].x)||0;const tatOf=id=>(TATS[id-1]||30)+xOf(id);
 const isSlow=id=>el(id)>tatOf(id)*60000;
 function tmHtml(id){if(DAYS[id]&&lock(id))return`<span class="tm">Available Sundays &amp; Wednesdays only</span>`;const x=S[id];if(!x||!x.at||x.s==="na")return"";const d=x.s==="done";
  return `<span class="tm ${isSlow(id)?"slow":""}">Assigned ${hhmm(x.at)} · expected by ${hhmm(x.at+tatOf(id)*60000)} · ${d?"finished "+hhmm(x.dt)+" · took ":"in progress "}${fmt(el(id))}${isSlow(id)?" ⚠ LATE (TAT "+tatOf(id)+" min)":""}</span>`}
@@ -160,9 +162,8 @@ function render(){
    const ok=(filter==="all"||(filter==="pending"?!v:v===filter))&&(tfil==="all"||a===+tfil)&&(!query||t.t.toLowerCase().includes(query));
    if(ok)shown++;
    h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
-   <div class="tt">${esc(t.t)}<span class="tp">⏱ ${tatOf(t.id)} min</span>${tmHtml(t.id)}</div>
-   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select>
-   <button class="nb" data-a="na" ${lock(t.id)?"disabled":""}>${lock(t.id)?"Not today":v==="na"?"Undo N/A":"N/A"}</button></div>`});
+   <div class="tt"><div class="nm">${esc(t.t)}</div><div class="mt"><span class="tp">⏱ ${tatOf(t.id)} min${xOf(t.id)?` (+${xOf(t.id)})`:""}</span>${v?"":`<button class="px" data-a="plus" title="Add 2 min to this task today">+2</button>${xOf(t.id)?`<button class="px" data-a="minus" title="Remove 2 min">−2</button>`:""}`}<button class="nb" data-a="na" ${lock(t.id)?"disabled":""}>${lock(t.id)?"Not today":v==="na"?"Undo N/A":"N/A"}</button></div>${tmHtml(t.id)}</div>
+   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select></div>`});
   h+="</section>"});
  if(!shown)h+='<div class="empty">No tasks match this filter.</div>';
  main.innerHTML=h;stats();report();
@@ -171,6 +172,8 @@ main.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||b.
  const id=+b.closest(".t").dataset.id,a=b.dataset.a;if(lock(id))return;
  if(a==="done")put(id,{s:V(id)==="done"?"":"done"});
  else if(a==="na")put(id,{s:V(id)==="na"?"":"na"});
+ else if(a==="plus")put(id,{x:xOf(id)+2});
+ else if(a==="minus")put(id,{x:Math.max(xOf(id)-2,0)});
 });
 main.addEventListener("change",e=>{if(e.target.dataset.a==="assign"){checkDay();put(+e.target.closest(".t").dataset.id,{a:+e.target.value})}});
 document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll("[data-f]").forEach(x=>x.classList.toggle("on",x===b));render()});
