@@ -33,6 +33,8 @@ main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;colum
 .cat h2{margin:0;padding:12px 16px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--bd);border-top:3px solid var(--ac)}
 .cat h2 span{color:var(--ac);background:var(--acb);padding:2px 9px;border-radius:99px;font-weight:600;font-size:11px;letter-spacing:0;text-transform:none}
 .t{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);transition:background .15s}
+.hr{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.cat h2 span.ct{background:var(--bg);color:var(--mu);border:1px solid var(--bd)}
+.tp{font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:1px 8px;margin-left:8px;white-space:nowrap;font-weight:500}
 .t:hover{background:var(--bg)}.t:last-child{border-bottom:0}
 .ck{width:22px;height:22px;border-radius:50%;border:2px solid #cbd5e1;flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff;transition:all .15s}
 .ck:hover{border-color:var(--ok)}
@@ -57,7 +59,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;p
 </style></head><body>
 <header><div class="wrap">
  <div class="top"><div class="brand"><div class="logo">📋</div><div><h1>Daily Work Tasks</h1><div class="date" id="date"></div></div></div>
- <div class="stats"><span class="chip ok" id="sDone"></span><span class="chip na" id="sNa"></span><span class="chip" id="sPend"></span></div></div>
+ <div class="stats"><span class="chip ok" id="sDone"></span><span class="chip na" id="sNa"></span><span class="chip" id="sPend"></span><span class="chip" id="sLeft" title="Work left (TAT of unfinished tasks, minus time already spent)"></span><span class="chip" id="sF4" title="Finish time if the work is shared by 4"></span><span class="chip" id="sF1" title="Finish time if one person does everything"></span></div></div>
  <div class="bar"><i class="b1" id="b1"></i><i class="b2" id="b2"></i></div>
  <div class="stats" id="tellers"></div>
 </div></header>
@@ -74,7 +76,7 @@ const SEED={
 "Morning Tasks":["Vault Proofs","Morning Midas (Returned Chqs)","Reversal And Historical"],
 "Teller's Batch Cross Checking":["Nada","Abdelrahman","Mohamed","Sherouk"],
 "Navigator Reports":["CBE Withdrawals","Transactions implemented over KYC Accounts","Account Opening and Closing","COD","CHQ Book - BPM","Data Quality KYC","NTB Data Quality","Casual Past Due","Referal By Account","Referal By Customer Number","Nil Report"],
-"T24 Reports":["Inactive Reset","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","Vault Register","Cash Balance"],
+"T24 Reports":["Inactive Reset","General Ledgers","Daily Issued","Cheques Stop Payment","E-Finance","Reversal Reports","Back Office","vault Register","Cash Balance"],
 "physical Tasks":["Tazbeet And Ta2weet","SR + Termination","Cash Counted and Initialed","Internals Cross Checking","Swifts Cross checking","CPC & PDC Excell + Mail","CPC cross Checking","Mail Bag","Filing"],
 "Printing Logs":["Midas EOD","Batch Log","SR Log","Pending Log","Swifts Log","Recived CPC Mail"],
 "End Of day":["Daily OR","GDWF","Settle POS","Settle Shipment","Send Unauthorized Mail","Authorize All Pending Charges Over T24","Authorize All Pending Over BPM","Gard Cash","Check Registers"],
@@ -137,11 +139,15 @@ function report(){
  rep.innerHTML=`<div class="box"><div class="sc"><h3>Today (longest first)</h3><table><tr><th>Task</th><th>Teller</th><th>Assigned</th><th>Expected by</th><th>Finished</th><th>TAT</th><th>Time</th></tr>${rows.map(r=>`<tr><td>${esc(r.t.t)}</td><td>${esc(nm(r.x.a))}</td><td>${hhmm(r.x.at)}</td><td>${hhmm(r.x.at+tatOf(r.t.id)*60000)}</td><td>${r.x.dt?hhmm(r.x.dt):"in progress"}</td><td>${tatOf(r.t.id)} min</td><td${red(r.d,r.t.id)}>${fmt(r.d)}</td></tr>`).join("")||'<tr><td colspan="7">Nothing assigned yet today.</td></tr>'}</table></div>
  <div class="sc"><h3>Slowest tasks across all days (average)</h3><table><tr><th>Task</th><th>Times done</th><th>TAT</th><th>Average</th><th>Longest</th></tr>${avg.map(r=>`<tr><td>${esc(r.t.t)}</td><td>${r.n}</td><td>${tatOf(r.t.id)} min</td><td${red(r.a,r.t.id)}>${fmt(r.a)}</td><td${red(r.m,r.t.id)}>${fmt(r.m)}</td></tr>`).join("")||'<tr><td colspan="5">No finished tasks recorded yet.</td></tr>'}</table></div></div>`;
 }
+const remOf=id=>{if(V(id))return 0;const m=tatOf(id)*60000;return A(id)?Math.max(m-el(id),0):m};
+const fz=ms=>ms>0?fmt(ms):"0";
 function stats(){
  let d=0,na=0;tasks.forEach(t=>{const v=V(t.id);if(v==="done")d++;else if(v==="na")na++});
  const T=tasks.length;
- date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"saved on this device only":mode==="error"?"connection problem":"connecting…");
+ date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"not shared: open the Claude link while signed in":mode==="error"?"connection problem":"connecting…");
  sDone.textContent="Done "+d;sNa.textContent="N/A "+na;sPend.textContent="Pending "+(T-d-na)+" / "+T;
+ let rem=0;tasks.forEach(t=>{if(!V(t.id)){const m=tatOf(t.id)*60000;rem+=A(t.id)?Math.max(m-el(t.id),0):m}});
+ sLeft.textContent="⏳ "+fz(rem);sF4.textContent="👥 "+(rem?hhmm(Date.now()+rem/4):"—");sF1.textContent="👤 "+(rem?hhmm(Date.now()+rem):"—");
  b1.style.width=d/T*100+"%";b2.style.width=na/T*100+"%";
  let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip">${NAMES[k-1]}: ${dn}/${mine.length} done</span>`}
  const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip late">Late: ${sl}</span>`;tellers.innerHTML=h;
@@ -149,12 +155,12 @@ function stats(){
 function render(){
  const cats=[...new Set(tasks.map(t=>t.c))];let h="",shown=0;
  cats.forEach(c=>{const list=tasks.filter(t=>t.c===c),na=list.filter(t=>V(t.id)==="na").length,dn=list.filter(t=>V(t.id)==="done").length;
-  h+=`<section class="cat"><h2>${esc(c)}<span>${dn}/${list.length-na} done${na?" · "+na+" N/A":""}</span></h2>`;
+  h+=`<section class="cat"><h2>${esc(c)}<div class="hr"><span class="ct" title="Total TAT · work left">⏱ ${fz(list.reduce((s,t)=>s+(V(t.id)==="na"?0:tatOf(t.id)*60000),0))} · ⏳ ${fz(list.reduce((s,t)=>s+remOf(t.id),0))}</span><span>${dn}/${list.length-na} done${na?" · "+na+" N/A":""}</span></div></h2>`;
   list.forEach(t=>{const v=V(t.id),a=A(t.id);
    const ok=(filter==="all"||(filter==="pending"?!v:v===filter))&&(tfil==="all"||a===+tfil)&&(!query||t.t.toLowerCase().includes(query));
    if(ok)shown++;
    h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
-   <div class="tt">${esc(t.t)}${tmHtml(t.id)}</div>
+   <div class="tt">${esc(t.t)}<span class="tp">⏱ ${tatOf(t.id)} min</span>${tmHtml(t.id)}</div>
    <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select>
    <button class="nb" data-a="na" ${lock(t.id)?"disabled":""}>${lock(t.id)?"Not today":v==="na"?"Undo N/A":"N/A"}</button></div>`});
   h+="</section>"});
