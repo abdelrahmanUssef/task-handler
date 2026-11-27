@@ -16,7 +16,7 @@ h1{font-size:20px;margin:0;font-weight:700;letter-spacing:-.01em}.date{color:rgb
 .stats{display:flex;gap:8px;flex-wrap:wrap}
 .chip{padding:5px 11px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:var(--card)}
 header .chip{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16);color:#fff}
-header .chip.ok{background:rgba(74,222,128,.18);color:#86efac}header .chip.na{background:rgba(251,191,36,.18);color:#fcd34d}header .chip.late{background:rgba(248,113,113,.22);color:#fecaca}
+header .chip.me{outline:2px solid #fff;outline-offset:-2px}header .chip.ok{background:rgba(74,222,128,.18);color:#86efac}header .chip.na{background:rgba(251,191,36,.18);color:#fcd34d}header .chip.late{background:rgba(248,113,113,.22);color:#fecaca}
 .bar{height:6px;background:rgba(255,255,255,.16);border-radius:99px;margin:16px 0 12px;overflow:hidden;display:flex}
 .bar i{display:block;height:100%;transition:width .3s}.b1{background:#4ade80}.b2{background:#fbbf24}
 .tb{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--bd);padding:10px 20px}
@@ -37,6 +37,7 @@ main{max-width:1300px;margin:0 auto;padding:18px 20px 40px;columns:3 340px;colum
 .mt{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
 .px{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;color:var(--ac);background:var(--acb);border-color:transparent}
 .tp{font-size:11px;color:var(--mu);background:var(--bg);border:1px solid var(--bd);border-radius:99px;padding:1px 8px;white-space:nowrap;font-weight:500}
+.t.mine{box-shadow:inset 3px 0 var(--ac)}
 .t:hover{background:var(--bg)}.t:last-child{border-bottom:0}
 .ck{width:22px;height:22px;border-radius:50%;border:2px solid #cbd5e1;flex:none;cursor:pointer;display:grid;place-items:center;font-size:13px;color:#fff;transition:all .15s}
 .ck:hover{border-color:var(--ok)}
@@ -61,19 +62,31 @@ table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;p
 </style></head><body>
 <header><div class="wrap">
  <div class="top"><div class="brand"><div class="logo">📋</div><div><h1>Daily Work Tasks</h1><div class="date" id="date"></div></div></div>
- <div class="stats"><span class="chip ok" id="sDone"></span><span class="chip na" id="sNa"></span><span class="chip" id="sPend"></span><span class="chip" id="sLeft" title="Work left (TAT of unfinished tasks, minus time already spent)"></span><span class="chip" id="sF4" title="Finish time if the work is shared by 4"></span><span class="chip" id="sF1" title="Finish time if one person does everything"></span></div></div>
+ <div class="stats"><span class="chip ok" id="sDone"></span><span class="chip na" id="sNa"></span><span class="chip" id="sPend"></span><span class="chip" id="sLeft" title="Work left (TAT of unfinished tasks, minus time already spent)"></span><span class="chip" id="sF4" title="Finish time if the work is shared by the whole team"></span><span class="chip" id="sF1" title="Finish time if one person does everything"></span></div></div>
  <div class="bar"><i class="b1" id="b1"></i><i class="b2" id="b2"></i></div>
  <div class="stats" id="tellers"></div>
 </div></header>
 <div class="tb"><div class="wrap"><div class="tools">
   <input type="search" id="q" placeholder="Search tasks…">
+  <select id="who" title="Choose who you are on this device"><option value="0">👤 I am…</option></select>
   <select id="tf"><option value="all">Everyone</option><option value="0">Unassigned</option></select>
   <button data-f="all" class="on">All</button><button data-f="pending">Pending</button><button data-f="done">Done</button><button data-f="na">Not available</button>
   <button id="rb">Time report</button><button id="reset">Reset today</button>
  </div></div></div>
 <section id="rep"></section>
 <main id="main"></main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
+/* ===== Paste your Firebase web-app config here (Firebase console > Project settings > Your apps) ===== */
+const FIREBASE_CONFIG={
+ apiKey:"",
+ authDomain:"",
+ projectId:"",
+ storageBucket:"",
+ messagingSenderId:"",
+ appId:""
+};
 const SEED={
 "Morning Tasks":["Vault Proofs","Morning Midas (Returned Chqs)","Reversal And Historical"],
 "Teller's Batch Cross Checking":["Nada","Abdelrahman","Mohamed","Sherouk"],
@@ -87,12 +100,13 @@ const SEED={
 };
 const TATS=[2,2,5,30,30,30,30,5,5,10,5,5,5,5,10,5,5,2,5,2,15,2,15,5,15,5,15,30,30,20,15,10,10,10,5,5,2,5,5,10,5,5,5,5,10,10,15,2,20,10,10];/* minutes allowed per task, in task order */
 const tasks=[];let n=1;for(const c in SEED)SEED[c].forEach(t=>tasks.push({id:n++,c,t}));
-TATS[51]=15;const DAYS={52:[0,3]};/* Microfilm: Sunday & Wednesday only */
+TATS[51]=15;TATS[52]=30;TATS[53]=30;const DAYS={52:[0,3]};/* Microfilm: Sunday & Wednesday only */
+tasks.splice(tasks.findIndex(t=>t.t==="Sherouk")+1,0,{id:53,c:"Teller's Batch Cross Checking",t:"Alaa"},{id:54,c:"Teller's Batch Cross Checking",t:"Micheal"});
 tasks.splice(tasks.findIndex(t=>t.t==="Mail Bag")+1,0,{id:52,c:"physical Tasks",t:"Microfilm"});
 const pad=x=>String(x).padStart(2,"0");
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let db=null,unsub=null,day=today(),S={},mode="connecting",filter="all",tfil="all",query="",queue={},H=[],repOpen=false;const NAMES=["Nada","Abdelrahman","Mohamed","Sherouk"],nm=k=>NAMES[k-1]||"";
+let ME=0,db=null,unsub=null,day=today(),S={},mode="connecting",filter="all",tfil="all",query="",queue={},H=[],repOpen=false;const NAMES=["Nada","Abdelrahman","Mohamed","Sherouk","Alaa","Micheal"],nm=k=>NAMES[k-1]||"";
 const LK=()=>"dwt_local_"+day;
 function loadLocal(){try{S=JSON.parse(localStorage.getItem(LK())||"{}")}catch(e){S={}}}
 function saveLocal(){try{localStorage.setItem(LK(),JSON.stringify(S))}catch(e){}}
@@ -103,7 +117,7 @@ function sub(){
 }
 async function init(){
  render();
- try{db=await Promise.race([claude.use("db"),new Promise(r=>setTimeout(()=>r(null),10000))])}catch(e){db=null}
+ try{if(FIREBASE_CONFIG.apiKey&&window.firebase){firebase.initializeApp(FIREBASE_CONFIG);db=firebase.firestore()}}catch(e){db=null}
  if(db){sub();subMeta()}else{mode="local";loadLocal();render()}
 }
 function subMeta(){
@@ -146,12 +160,12 @@ const fz=ms=>ms>0?fmt(ms):"0";
 function stats(){
  let d=0,na=0;tasks.forEach(t=>{const v=V(t.id);if(v==="done")d++;else if(v==="na")na++});
  const T=tasks.length;
- date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"not shared: open the Claude link while signed in":mode==="error"?"connection problem":"connecting…");
+ date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",year:"numeric",month:"long",day:"numeric"})+" · resets daily · "+(mode==="live"?"shared live":mode==="local"?"not connected: check the Firebase settings":mode==="error"?"connection problem":"connecting…");
  sDone.textContent="Done "+d;sNa.textContent="N/A "+na;sPend.textContent="Pending "+(T-d-na)+" / "+T;
  let rem=0;tasks.forEach(t=>{if(!V(t.id)){const m=tatOf(t.id)*60000;rem+=A(t.id)?Math.max(m-el(t.id),0):m}});
- sLeft.textContent="⏳ "+fz(rem);sF4.textContent="👥 "+(rem?hhmm(Date.now()+rem/4):"—");sF1.textContent="👤 "+(rem?hhmm(Date.now()+rem):"—");
+ sLeft.textContent="⏳ "+fz(rem);sF4.textContent="👥 "+(rem?hhmm(Date.now()+rem/NAMES.length):"—");sF1.textContent="👤 "+(rem?hhmm(Date.now()+rem):"—");
  b1.style.width=d/T*100+"%";b2.style.width=na/T*100+"%";
- let h="";for(let k=1;k<=4;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip">${NAMES[k-1]}: ${dn}/${mine.length} done</span>`}
+ let h="";for(let k=1;k<=NAMES.length;k++){const mine=tasks.filter(t=>A(t.id)===k&&V(t.id)!=="na"),dn=mine.filter(t=>V(t.id)==="done").length;h+=`<span class="chip ${ME===k?"me":""}">${NAMES[k-1]}${ME===k?" (me)":""}: ${dn}/${mine.length} done</span>`}
  const un=tasks.filter(t=>!A(t.id)&&!V(t.id)).length;h+=`<span class="chip">Unassigned: ${un}</span>`;const sl=tasks.filter(t=>isSlow(t.id)).length;h+=`<span class="chip late">Late: ${sl}</span>`;tellers.innerHTML=h;
 }
 function render(){
@@ -161,9 +175,9 @@ function render(){
   list.forEach(t=>{const v=V(t.id),a=A(t.id);
    const ok=(filter==="all"||(filter==="pending"?!v:v===filter))&&(tfil==="all"||a===+tfil)&&(!query||t.t.toLowerCase().includes(query));
    if(ok)shown++;
-   h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
+   h+=`<div class="t ${v} ${ok?"":"hide"} ${isSlow(t.id)?"slow":""} ${ME&&a===ME?"mine":""}" data-id="${t.id}"><div class="ck" data-a="done" title="Mark done">${v==="done"?"✓":v==="na"?"–":""}</div>
    <div class="tt"><div class="nm">${esc(t.t)}</div><div class="mt"><span class="tp">⏱ ${tatOf(t.id)} min${xOf(t.id)?` (+${xOf(t.id)})`:""}</span>${v?"":`<button class="px" data-a="plus" title="Add 2 min to this task today">+2</button>${xOf(t.id)?`<button class="px" data-a="minus" title="Remove 2 min">−2</button>`:""}`}<button class="nb" data-a="na" ${lock(t.id)?"disabled":""}>${lock(t.id)?"Not today":v==="na"?"Undo N/A":"N/A"}</button></div>${tmHtml(t.id)}</div>
-   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${[1,2,3,4].map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select></div>`});
+   <select data-a="assign" class="${a?"has":""}" ${v==="na"?"disabled":""}><option value="0">Assign…</option>${NAMES.map((_,i)=>i+1).map(k=>`<option value="${k}" ${a===k?"selected":""}>${NAMES[k-1]}</option>`).join("")}</select></div>`});
   h+="</section>"});
  if(!shown)h+='<div class="empty">No tasks match this filter.</div>';
  main.innerHTML=h;stats();report();
@@ -186,6 +200,35 @@ reset.onclick=()=>{if(!confirm("Clear today’s assignments and progress for eve
  ids.forEach(id=>{queue[id]=(queue[id]||Promise.resolve()).then(()=>Promise.all([db.collection("days/"+day+"/tasks").doc(id).delete(),db.collection("history").doc(day+"-"+id).delete()])).catch(()=>{})})};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkDay()});
 setInterval(()=>{checkDay();if(!["SELECT"].includes(document.activeElement.tagName))render()},30000);
-document.getElementById("tf").insertAdjacentHTML("beforeend",NAMES.map((n,i)=>`<option value="${i+1}">${n}</option>`).join(""));
+const opts=NAMES.map((n,i)=>`<option value="${i+1}">${n}</option>`).join("");
+document.getElementById("tf").insertAdjacentHTML("beforeend",opts);
+who.insertAdjacentHTML("beforeend",opts);
+try{ME=+localStorage.getItem("dwt_me")||0}catch(e){}
+if(ME){who.value=String(ME);tfil=String(ME);tf.value=tfil}
+who.onchange=()=>{ME=+who.value;try{localStorage.setItem("dwt_me",ME)}catch(e){}tfil=ME?String(ME):"all";tf.value=tfil;render()};
 init();
-</script></body></html>
+</script>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDH1zzz3ssNFj9Tclax6uHsbFuKvLpvb4M",
+    authDomain: "alaa-legacy.firebaseapp.com",
+    projectId: "alaa-legacy",
+    storageBucket: "alaa-legacy.firebasestorage.app",
+    messagingSenderId: "288484324505",
+    appId: "1:288484324505:web:0e53fb13fcad084dd67408",
+    measurementId: "G-NVHT7VXBMX"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
+</body></html>
